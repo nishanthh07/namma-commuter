@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namma Commuter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background: #ffffff; }
+        .glass-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen pb-12">
+    
+    <!-- Hero Banner & Route Setup -->
+    <div class="relative bg-slate-900 border-b border-slate-200 overflow-hidden shadow-md">
+        <div class="absolute inset-0 z-0 opacity-20">
+            <img src="./images/metro.jpg" alt="Bangalore Namma Metro" class="w-full h-full object-cover" onerror="this.style.display='none'">
+        </div>
+        <div class="relative z-10 max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-1 text-center md:text-left">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white">Namma Commuter</h1>
+                <p class="text-sm text-slate-300 max-w-md">Zero-panic daily commuting from Home to Office with automated Plan A, B, and C backups.</p>
+            </div>
+            
+            <!-- Home & Office Inputs -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <div class="flex flex-col gap-2 w-full sm:w-64">
+                    <input type="text" id="home-input" value="Whitefield, Bengaluru" placeholder="Home Location" class="w-full bg-white text-slate-800 px-3 py-1.5 rounded-xl text-xs border border-slate-300 outline-none focus:border-emerald-600 shadow-sm" />
+                    <input type="text" id="office-input" value="Indiranagar, Bengaluru" placeholder="Office Location" class="w-full bg-white text-slate-800 px-3 py-1.5 rounded-xl text-xs border border-slate-300 outline-none focus:border-emerald-600 shadow-sm" />
+                </div>
+                <button onclick="syncRoute('normal')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl text-xs font-bold shadow-md cursor-pointer whitespace-nowrap">
+                    🚀 Sync Route
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto px-6 mt-8 space-y-8">
+        
+        <!-- Weather & Road Conditions Bar -->
+        <div class="glass-card p-6 rounded-3xl grid grid-cols-1 md:grid-cols-4 gap-4 shadow-sm items-center">
+            <div class="flex items-center gap-3">
+                <div id="weather-icon-large" class="text-3xl p-2.5 bg-emerald-100 rounded-2xl text-emerald-700">🌤️</div>
+                <div>
+                    <h4 id="weather-location-title" class="text-sm font-bold text-slate-900">Route Weather</h4>
+                    <p id="weather-desc-text" class="text-xs text-slate-600">Partly Cloudy</p>
+                </div>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-xs shadow-xs">
+                <span class="text-slate-400 font-semibold block uppercase">Road Traffic</span>
+                <span id="road-traffic-status" class="font-bold text-slate-900">Smooth traffic flow across corridors.</span>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-xs shadow-xs">
+                <span class="text-slate-400 font-semibold block uppercase">Waterlogging / Hazards</span>
+                <span id="waterlogging-status" class="font-bold text-emerald-700">None. All underpasses clear.</span>
+            </div>
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 text-xs shadow-xs">
+                <span class="text-slate-400 font-semibold block uppercase">Construction / Metro Work</span>
+                <span id="construction-status" class="font-bold text-slate-900">No active roadblocks.</span>
+            </div>
+        </div>
+
+        <!-- Namma Metro Real-Time Track Monitor -->
+        <div class="glass-card p-6 rounded-3xl space-y-4 shadow-sm border-l-4 border-l-purple-600">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span>🚇</span> Daily Metro Line Health (Purple & Green Line)
+                </h3>
+                <span id="toggle-badge" ondblclick="toggleSimulationMode()" title="Double-click to simulate delay" class="text-xs text-purple-700 bg-purple-100 px-3 py-1 rounded-full font-semibold cursor-pointer select-none hover:bg-purple-200 transition">
+                    Live BMRCL Feed (Double-Click for Demo)
+                </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 bg-white rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-purple-600"></span>
+                            <span class="text-sm font-bold text-slate-900">Purple Line Corridor</span>
+                        </div>
+                        <p id="purple-status-text" class="text-xs font-medium text-slate-600 pl-5">Normal Service (Freq: 4 mins)</p>
+                    </div>
+                    <span id="purple-badge-state" class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg">ONLINE</span>
+                </div>
+                <div class="p-4 bg-white rounded-2xl border border-slate-200 flex items-center justify-between shadow-xs">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+                            <span class="text-sm font-bold text-slate-900">Green Line Corridor</span>
+                        </div>
+                        <p id="green-status-text" class="text-xs font-medium text-slate-600 pl-5">Normal Service (Freq: 5 mins)</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg">ONLINE</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Agent Autonomous Plans Grid (Plan A, B, C) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Plan A -->
+            <div id="plan-a-container" class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-t-emerald-500 shadow-sm flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span id="plan-a-tag" class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md uppercase">Primary Route</span>
+                        <span id="plan-a-conf" class="text-xs font-bold text-slate-500">Confidence: 98%</span>
+                    </div>
+                    <h4 id="plan-a-title" class="text-base font-bold text-slate-900">Plan A: Direct Metro + Short Walk</h4>
+                    <p id="plan-a-desc" class="text-sm text-slate-600">Seamless transit from Home to Office. On-time arrival expected.</p>
+                </div>
+                <div class="pt-4 border-t border-slate-200 flex justify-between items-center text-xs">
+                    <span id="plan-a-eta" class="font-bold text-slate-900">Target ETA: 9:40 AM</span>
+                    <span id="plan-a-status-pill" class="text-emerald-700 font-semibold">Zero Panic</span>
+                </div>
+            </div>
+
+            <!-- Plan B (Bus stop & Namma Yatri Auto) -->
+            <div id="plan-b-container" class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-t-blue-500 shadow-sm flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-md uppercase">AI Smart Backup B</span>
+                        <span id="plan-b-cost" class="text-xs font-bold text-slate-600">Est. ₹85</span>
+                    </div>
+                    <h4 id="plan-b-title" class="text-base font-bold text-slate-900">Plan B: BMTC Feeder Bus + Namma Yatri Auto</h4>
+                    <p id="plan-b-desc" class="text-sm text-slate-600">Surface bypass avoiding metro delay bottleneck.</p>
+                    
+                    <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-3 space-y-1.5 text-xs text-blue-900">
+                        <div class="flex items-center gap-1.5 font-bold">
+                            <span>🚏</span>
+                            <span id="plan-b-stop">Indiranagar 12th Main BMTC Stop</span>
+                        </div>
+                        <div class="flex justify-between text-blue-800">
+                            <span id="plan-b-walk">🚶 280 meters (4 mins walk)</span>
+                            <span id="plan-b-bus-freq" class="font-semibold text-emerald-700">Next: 6 mins</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span id="plan-b-eta" class="font-bold text-slate-900">Backup ETA: 9:46 AM</span>
+                        <span class="text-blue-700 font-semibold">On-Time</span>
+                    </div>
+                    <a id="plan-b-btn" href="https://nammayatri.in/" target="_blank" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl font-bold text-xs text-center block transition shadow-sm">
+                        ⚡ Instant Auto via Namma Yatri
+                    </a>
+                </div>
+            </div>
+
+            <!-- Plan C (Cab) -->
+            <div class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-t-amber-500 shadow-sm flex flex-col justify-between">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md uppercase">Direct Cab Backup C</span>
+                        <span id="plan-c-cost" class="text-xs font-bold text-slate-600">Est. ₹220</span>
+                    </div>
+                    <h4 id="plan-c-title" class="text-base font-bold text-slate-900">Plan C: Direct Namma Yatri Cab</h4>
+                    <p id="plan-c-desc" class="text-sm text-slate-600">Point-to-point AC cab via Inner Ring Road flyover.</p>
+                    
+                    <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 flex justify-between items-center">
+                        <span class="font-semibold">🚗 Doorstep Pickup</span>
+                        <span class="text-slate-600">Zero Walking Required</span>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span id="plan-c-eta" class="font-bold text-slate-900">Cab ETA: 9:48 AM</span>
+                        <span class="text-amber-700 font-semibold">Express</span>
+                    </div>
+                    <a id="plan-c-btn" href="https://nammayatri.in/" target="_blank" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-bold text-xs text-center block transition shadow-sm">
+                        🚕 Book Namma Yatri Cab Now
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Frontend Script -->
+    <script>
+        const BACKEND_URL = 'https://63vgdr1g-5000.inc1.devtunnels.ms';
+        let currentMode = 'normal';
+
+        async function syncRoute(mode = 'normal') {
+            currentMode = mode;
+            const home = document.getElementById('home-input').value;
+            const office = document.getElementById('office-input').value;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/evaluate-commute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ home, office, mode })
+                });
+                const data = await res.json();
+
+                // Metro & Telemetry updates
+                document.getElementById('purple-status-text').innerText = data.purpleLineStatus;
+                document.getElementById('green-status-text').innerText = data.greenLineStatus;
+                document.getElementById('road-traffic-status').innerText = data.roadTraffic;
+                document.getElementById('waterlogging-status').innerText = data.waterloggingAlert;
+                document.getElementById('construction-status').innerText = data.constructionNote;
+
+                // Purple line badge
+                const purpleBadge = document.getElementById('purple-badge-state');
+                if (data.planA.isDelayed) {
+                    purpleBadge.innerText = 'DELAYED';
+                    purpleBadge.className = 'px-2.5 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-lg animate-pulse';
+                } else {
+                    purpleBadge.innerText = 'ONLINE';
+                    purpleBadge.className = 'px-2.5 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg';
+                }
+
+                // Plan A Update
+                document.getElementById('plan-a-title').innerText = data.planA.title;
+                document.getElementById('plan-a-desc').innerText = data.planA.description;
+                document.getElementById('plan-a-eta').innerText = `ETA: ${data.planA.eta}`;
+                document.getElementById('plan-a-conf').innerText = `Confidence: ${data.planA.confidence}`;
+
+                // Plan B
+                document.getElementById('plan-b-title').innerText = data.planB.title;
+                document.getElementById('plan-b-desc').innerText = data.planB.description;
+                document.getElementById('plan-b-stop').innerText = data.planB.busStopName;
+                document.getElementById('plan-b-walk').innerText = `🚶 ${data.planB.walkDistance} (${data.planB.walkTime})`;
+                document.getElementById('plan-b-bus-freq').innerText = data.planB.busFrequency || '';
+                document.getElementById('plan-b-eta').innerText = `Backup ETA: ${data.planB.eta}`;
+                document.getElementById('plan-b-cost').innerText = `Est. ${data.planB.cost}`;
+                document.getElementById('plan-b-btn').href = data.planB.bookingUrl;
+                document.getElementById('plan-b-btn').innerText = data.planB.buttonText;
+
+                // Plan C
+                document.getElementById('plan-c-title').innerText = data.planC.title;
+                document.getElementById('plan-c-desc').innerText = data.planC.description;
+                document.getElementById('plan-c-eta').innerText = `Cab ETA: ${data.planC.eta}`;
+                document.getElementById('plan-c-cost').innerText = `Est. ${data.planC.cost}`;
+                document.getElementById('plan-c-btn').href = data.planC.bookingUrl;
+                document.getElementById('plan-c-btn').innerText = data.planC.buttonText;
+
+            } catch (err) {
+                console.error("Sync error:", err);
+            }
+        }
+
+        function toggleSimulationMode() {
+            const nextMode = currentMode === 'normal' ? 'delayed' : 'normal';
+            syncRoute(nextMode);
+            const badge = document.getElementById('toggle-badge');
+            if (nextMode === 'delayed') {
+                badge.innerText = "🔴 SIMULATING DELAY (Double-click to reset)";
+                badge.className = "text-xs text-red-700 bg-red-100 px-3 py-1 rounded-full font-semibold cursor-pointer select-none hover:bg-red-200 transition animate-pulse";
+            } else {
+                badge.innerText = "Live BMRCL Feed (Double-Click for Demo)";
+                badge.className = "text-xs text-purple-700 bg-purple-100 px-3 py-1 rounded-full font-semibold cursor-pointer select-none hover:bg-purple-200 transition";
+            }
+        }
+
+        async function initWeather() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/weather?lat=12.9716&lon=77.5946`);
+                const weather = await res.json();
+                document.getElementById('weather-location-title').innerText = "Route Weather (Bengaluru)";
+                document.getElementById('weather-icon-large').innerText = weather.icon;
+                document.getElementById('weather-desc-text').innerText = `${weather.condition}, ${weather.temperature}°C (Feels ${weather.feelsLike}°C)`;
+            } catch (e) {
+                console.error("Weather init error", e);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initWeather();
+            syncRoute('normal');
+        });
+    </script>
+</body>
+</html>
